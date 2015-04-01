@@ -7,6 +7,7 @@ public class HandlerThread extends Thread {
     public int ID;
     public Boolean Estado;
     public Socket clientSocket;
+    String route;
 
     public HandlerThread(int num){
         ID = num;
@@ -14,9 +15,85 @@ public class HandlerThread extends Thread {
         start();
     }
 
-    public void AsignarTarea(Socket cliente){
+    public void AsignarTarea(Socket cliente, String route1){
         clientSocket = cliente;
         Estado = true;
+        route = route1;
+    }
+
+    private void WriteHeader(PrintWriter out, int code, String status, String[] params){
+        out.write("HTTP/1.0 " + code + " " + status + "\r\n");
+        for(String param: params)
+        {
+            out.write(param);
+        }
+        out.write("\r\n");
+    }
+
+    private void ConnectionThread(Socket connection){
+        try {
+            BufferedReader input = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            OutputStream output = new BufferedOutputStream(connection.getOutputStream());
+            PrintWriter printWriter = new PrintWriter(connection.getOutputStream(), true);
+
+            //leyendo el request
+            String request = input.readLine();
+            System.out.println(request);
+
+            while (true) {
+                String misc = input.readLine();
+                if (misc==null || misc.length()==0)
+                    break;
+            }
+
+            String[] subdivitions =  request.split(" ");//du du du, du du du
+
+            if(subdivitions[1].equals("/")){
+                try{
+                    String path = route + "/main.html";
+                    File f = new File(path);
+                    InputStream file = new FileInputStream(f);
+                    WriteHeader(printWriter, 200, "OK", new String[] {});
+                    sendFile(file, output);
+                }catch (IOException e) {
+                    WriteHeader(printWriter, 404, "Not Found", new String[] {});
+                }
+            }
+            else if(subdivitions[1].equals("/home_old")){
+                WriteHeader(printWriter, 301, "Moved Permanently", new String[]{"Location: /\r\n"});
+            }
+            else if(subdivitions[1].equals("/secret")){
+                try{
+                    String path = route + "/secret.html";
+                    File f = new File(path);
+                    InputStream file = new FileInputStream(f);
+                    WriteHeader(printWriter, 403, "Forbidden", new String[] {});
+                    sendFile(file, output);
+                }catch (IOException e) {
+                    WriteHeader(printWriter, 404, "Not Found", new String[] {});
+                }            }
+            else{
+                WriteHeader(printWriter, 404, "Not Found", new String[] {});
+            }
+
+            printWriter.flush();
+            output.close();
+            connection.close();
+
+            System.out.println("La conexion con el cliente a terminado");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void sendFile(InputStream file, OutputStream out)
+    {
+        try {
+            byte[] buffer = new byte[1000];
+            while (file.available()>0)
+                out.write(buffer, 0, file.read(buffer));
+        } catch (IOException e) {
+            System.err.println(e); }
     }
 
     @Override
@@ -24,47 +101,7 @@ public class HandlerThread extends Thread {
         try {
             while(true){
                 if(Estado){
-                    BufferedReader in = new BufferedReader(
-                            new InputStreamReader(clientSocket.getInputStream())
-                    );
-                    PrintWriter out = new PrintWriter(
-                            new BufferedWriter(
-                                    new OutputStreamWriter(clientSocket.getOutputStream())),true);
-
-                    String cabecera = in.readLine();
-                    String[] division = cabecera.split(" ");
-                    System.out.println(ID + " - " + cabecera);
-
-                    if(division[1].equals("/")){
-                        out.write("HTTP/1.1 200 OK\r\n");
-                        out.write("Content-Type: text/html\r\n");
-                        out.write("\r\n");
-                        out.write("<TITLE>Tarea Redes</TITLE>");
-                        out.write("<P>Bienvenidos al Sitio</P>");
-                    }
-                    else if(division[1].equals("/home_old")){
-                        out.write("HTTP/1.1 301 Moved Permanently\r\n");
-                        out.write("Location: /\r\n");
-                        out.write("\r\n");
-                    }
-                    else if(division[1].equals("/secret")){
-                        out.write("HTTP/1.1 403 Forbidden\r\n");
-                        out.write("Content-Type: text/html\r\n");
-                        out.write("\r\n");
-                        out.write("<TITLE>Tarea Redes</TITLE>");
-                        out.write("<P>Pagin Secreta</P>");
-                    }
-                    else{
-                        out.write("HTTP/1.1 404 OK\r\n");
-                        out.write("Content-Type: text/html\r\n");
-                        out.write("\r\n");
-                    }
-
-                    out.flush();
-                    out.close();
-                    in.close();
-                    clientSocket.close();
-
+                    ConnectionThread(clientSocket);
                     Estado = false;
                     PoolThread.Disponibles[ID] = true;
                 }
@@ -72,6 +109,7 @@ public class HandlerThread extends Thread {
                     //System.out.println(ID);
                 }
                 try {
+                    //Forzar el uso de más threads
                     Thread.sleep(100);
                 } catch(InterruptedException ex){}
             }

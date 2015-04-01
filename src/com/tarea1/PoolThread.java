@@ -22,12 +22,12 @@ public class PoolThread {
         }
     }
 
-    public void Asignar(Socket clientSocket){
+    public void Asignar(Socket clientSocket, String route){
         //Busca un Thread disponi
         for(int i = 0; i < Totales; i++){
             if(Disponibles[i]){
                 Disponibles[i] = false;
-                Elementos[i].AsignarTarea(clientSocket);
+                Elementos[i].AsignarTarea(clientSocket, route);
                 break;
             }
         }
