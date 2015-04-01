@@ -49,38 +49,63 @@ public class HandlerThread extends Thread {
             String[] subdivitions =  request.split(" ");//du du du, du du du
 
 
-            if(subdivitions[0].equals("GET")) {
-                if (subdivitions[1].equals("/")) {
-                    try {
+            if(subdivitions[0].equals("GET")){
+                if(subdivitions[1].equals("/")){
+                    try{
                         String path = route + "/main.html";
                         File f = new File(path);
                         InputStream file = new FileInputStream(f);
-                        WriteHeader(printWriter, 200, "OK", new String[]{});
+                        WriteHeader(printWriter, 200, "OK", new String[] {});
                         sendFile(file, output);
-                    } catch (IOException e) {
-                        WriteHeader(printWriter, 404, "Not Found", new String[]{});
+                    }catch (IOException e) {
+                        WriteHeader(printWriter, 404, "Not Found", new String[] {});
                     }
-                } else if (subdivitions[1].equals("/home_old")) {
+                }
+                else if(subdivitions[1].equals("/login")){
+                    try{
+                        String path = route + "/login.html";
+                        File f = new File(path);
+                        InputStream file = new FileInputStream(f);
+                        WriteHeader(printWriter, 200, "OK", new String[] {});
+                        sendFile(file, output);
+                    }catch (IOException e) {
+                        WriteHeader(printWriter, 404, "Not Found", new String[] {});
+                    }
+                }
+                else if(subdivitions[1].equals("/home_old")){
                     WriteHeader(printWriter, 301, "Moved Permanently", new String[]{"Location: /\r\n"});
-                } else if (subdivitions[1].equals("/secret")) {
-                    try {
+                }
+                else if(subdivitions[1].equals("/secret")){
+                    try{
                         String path = route + "/secret.html";
                         File f = new File(path);
                         InputStream file = new FileInputStream(f);
-                        WriteHeader(printWriter, 403, "Forbidden", new String[]{});
+                        WriteHeader(printWriter, 403, "Forbidden", new String[] {});
                         sendFile(file, output);
-                    } catch (IOException e) {
-                        WriteHeader(printWriter, 404, "Not Found", new String[]{});
+                    }catch (IOException e) {
+                        WriteHeader(printWriter, 404, "Not Found", new String[] {});
                     }
-                } else {
-                    WriteHeader(printWriter, 404, "Not Found", new String[]{});
+                }
+                else{
+                    WriteHeader(printWriter, 404, "Not Found", new String[] {});
                 }
             }
-            
-            else{
-                WriteHeader(printWriter, 404, "Not Found", new String[]{});
+            else if(subdivitions[0].equals("post")){
+                if(subdivitions[1].equals("/secret")){
+                    try{
+                        String path = route + "/main.html";
+                        File f = new File(path);
+                        InputStream file = new FileInputStream(f);
+                        WriteHeader(printWriter, 200, "OK", new String[] {});
+                        sendFile(file, output);
+                    }catch (IOException e) {
+                        WriteHeader(printWriter, 404, "Not Found", new String[] {});
+                    }
+                }
             }
-
+            else{
+                WriteHeader(printWriter, 404, "Not Found", new String[] {});
+            }
 
             printWriter.flush();
             output.close();
