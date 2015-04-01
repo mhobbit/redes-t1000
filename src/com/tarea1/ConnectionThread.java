@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class ConnectionThread {
+class ConnectionThread {
     Socket connection;
 
     public ConnectionThread(Socket connection) {
@@ -19,15 +19,12 @@ public class ConnectionThread {
 
             //leyendo el request
             String[] request = input.readLine().split(" ");
-            input.close();
 
             if(request.length != 3) {
                 errorReport(printOutput, connection, "400", "Bad Request", "Your browser sent a request that ");
             }
             //HTTP HANDLERS!
-            if(){
-
-            }
+            errorReport(printOutput, connection, "200", "TEST", "test completo!");
 
         } catch (IOException e) {
             e.printStackTrace();
