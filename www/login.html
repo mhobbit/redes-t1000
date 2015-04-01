@@ -14,15 +14,15 @@
 	<meta charset="utf-8" />
 </head>
 <body>
+<div class="container">
 	<h1>Formulario Ingreso</h1>
 	<br>
 	<br>
-	<form action="/secret" method="POST">
-		<label for="user">Usuario: </label>
-		<input type="text" id="user"><br><br>
-		<label for="pass">Contraseña: </label>
-		<input type="password" id="pass"><br><br>
-		<input type="submit" value="Log in">
+	<form method="POST" action="/secret">
+		<p><label>Usuario: <input name="user"></label></p>
+		<p><label>Contraseña: <input type=password name="pass"></label></p>
+		<p><input type="submit" value="Login"></p>
 	</form>
+</div>
 </body>
 </html>

@@ -33,23 +33,27 @@ public class HandlerThread extends Thread {
     private void ConnectionThread(Socket connection){
         try {
             BufferedReader input = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            OutputStream output = new BufferedOutputStream(connection.getOutputStream());
-            PrintWriter printWriter = new PrintWriter(connection.getOutputStream(), true);
 
             //leyendo el request
             String request = input.readLine();
             System.out.println(request);
 
             while (true) {
-                String misc = input.readLine();
-                if (misc==null || misc.length()==0)
+                String lines = input.readLine();
+                System.out.println(lines);
+                if (lines==null || lines.length()==0)
                     break;
             }
+
+            OutputStream output = new BufferedOutputStream(connection.getOutputStream());
+            PrintWriter printWriter = new PrintWriter(connection.getOutputStream(), true);
+
 
             String[] subdivitions =  request.split(" ");//du du du, du du du
 
 
             if(subdivitions[0].equals("GET")){
+                //HTTPHandlers para GET
                 if(subdivitions[1].equals("/")){
                     try{
                         String path = route + "/main.html";
@@ -90,7 +94,8 @@ public class HandlerThread extends Thread {
                     WriteHeader(printWriter, 404, "Not Found", new String[] {});
                 }
             }
-            else if(subdivitions[0].equals("post")){
+            else if(subdivitions[0].equals("POST")){
+                //HTTPHandlers para POST
                 if(subdivitions[1].equals("/secret")){
                     try{
                         String path = route + "/main.html";
