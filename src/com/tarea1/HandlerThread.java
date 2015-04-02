@@ -33,28 +33,48 @@ public class HandlerThread extends Thread {
     private void ConnectionThread(Socket connection){
         try {
             BufferedReader input = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-            //leyendo el request
-            String request = input.readLine();
-            System.out.println(request);
-
-            while (true) {
-                String lines = input.readLine();
-                System.out.println(lines);
-                if (lines==null || lines.length()==0)
-                    break;
-            }
-
             OutputStream output = new BufferedOutputStream(connection.getOutputStream());
             PrintWriter printWriter = new PrintWriter(connection.getOutputStream(), true);
 
+            //leyendo el request
+            String request = input.readLine();
+            String[] subdivitions =  request.split(" ");
+            System.out.println(request);
 
-            String[] subdivitions =  request.split(" ");//du du du, du du du
+            if(subdivitions[0].equals("GET")) {
+                while (true) {
+                    String lines = input.readLine();
+                    System.out.println(lines);
+                    if (lines == null || lines.length() == 0)
+                        break;
+                }
+            }
+            else{ //POST
+                int contentLength = -1;
+                while (true) {
+                    String line = input.readLine();
+                    System.out.println(line);
+
+                    String contentLengthStr = "Content-Length: ";
+                    if (line.startsWith(contentLengthStr)) {
+                        contentLength = Integer.parseInt(line.substring(contentLengthStr.length()));
+                    }
+
+                    if (line.length() == 0) {
+                        break;
+                    }
+                }
+
+                char[] content = new char[contentLength];
+                input.read(content);
+                System.out.println(new String(content));
+            }
 
 
             if(subdivitions[0].equals("GET")){
                 //HTTPHandlers para GET
                 if(subdivitions[1].equals("/")){
+                    System.out.println("ruta: "+route);
                     try{
                         String path = route + "/main.html";
                         File f = new File(path);
@@ -126,7 +146,7 @@ public class HandlerThread extends Thread {
     {
         try {
             byte[] buffer = new byte[1000];
-            while (file.available()>0)
+            while (file.available() > 0)
                 out.write(buffer, 0, file.read(buffer));
         } catch (IOException e) {
             System.err.println(e); }
