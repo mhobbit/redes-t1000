@@ -33,6 +33,8 @@ public class HandlerThread extends Thread {
     private void ConnectionThread(Socket connection){
         try {
             BufferedReader input = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            OutputStream output = new BufferedOutputStream(connection.getOutputStream());
+            PrintWriter printWriter = new PrintWriter(connection.getOutputStream(), true);
 
             //leyendo el request
             String request = input.readLine();
@@ -55,10 +57,6 @@ public class HandlerThread extends Thread {
                     requestContent.append((char) input.read());
                 }
             }
-
-            OutputStream output = new BufferedOutputStream(connection.getOutputStream());
-            PrintWriter printWriter = new PrintWriter(connection.getOutputStream(), true);
-
 
             String[] subdivitions =  request.split(" ");//du du du, du du du
 
@@ -142,7 +140,7 @@ public class HandlerThread extends Thread {
     {
         try {
             byte[] buffer = new byte[1000];
-            while (file.available()>0)
+            while (file.available() > 0)
                 out.write(buffer, 0, file.read(buffer));
         } catch (IOException e) {
             System.err.println(e); }
