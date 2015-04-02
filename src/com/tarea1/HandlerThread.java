@@ -1,7 +1,11 @@
 package com.tarea1;
 
+import javafx.collections.transformation.SortedList;
+
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HandlerThread extends Thread {
     public int ID;
@@ -36,14 +40,15 @@ public class HandlerThread extends Thread {
             OutputStream output = new BufferedOutputStream(connection.getOutputStream());
             PrintWriter printWriter = new PrintWriter(connection.getOutputStream(), true);
 
-            //leyendo el request
+            //Extrayendo primera linea del request
             String request = input.readLine();
             int contentLength = 0;
             System.out.println(request);
 
+            //Extraer datos del request
             while (true) {
                 String line = input.readLine();
-                System.out.println(line);
+                //System.out.println(line);
                 if (line.contains("Content-Length")){
                     contentLength = Integer.parseInt(line.split(":")[1].replace(" ", ""));
                 }
@@ -57,12 +62,16 @@ public class HandlerThread extends Thread {
                     requestContent.append((char) input.read());
                 }
             }
-
             String[] subdivitions =  request.split(" ");//du du du, du du du
 
+            //AQUI HACER EL ARCHIVO DE LOG DE USUARIOS (NO CONFUNDIR CON LOGIN DE USUARIOS)
+            String connectionIP = connection.getInetAddress().toString();
+            String logLine = connectionIP.substring(1, connectionIP.length())+ " " +subdivitions[1];
+            while(!Main.LogUser(logLine));
 
+            //HTTP Handlers
             if(subdivitions[0].equals("GET")){
-                //HTTPHandlers para GET
+                //HTTP Handlers para GET
                 if(subdivitions[1].equals("/")){
                     try{
                         String path = route + "/main.html";
@@ -90,11 +99,21 @@ public class HandlerThread extends Thread {
                 }
                 else if(subdivitions[1].equals("/secret")){
                     try{
-                        String path = route + "/secret.html";
-                        File f = new File(path);
-                        InputStream file = new FileInputStream(f);
-                        WriteHeader(printWriter, 403, "Forbidden", new String[] {});
-                        sendFile(file, output);
+                        System.out.println("lista: "+Main.authClients.toString());
+                        if (Main.authClients.contains(connectionIP)){
+                            String path = route + "/secret.html";
+                            File f = new File(path);
+                            InputStream file = new FileInputStream(f);
+                            WriteHeader(printWriter, 200, "OK", new String[] {});
+                            sendFile(file, output);
+                        }
+                        else {
+                            String path = route + "/forbidden.html";
+                            File f = new File(path);
+                            InputStream file = new FileInputStream(f);
+                            WriteHeader(printWriter, 403, "Forbidden", new String[] {});
+                            sendFile(file, output);
+                        }
                     }catch (IOException e) {
                         WriteHeader(printWriter, 404, "Not Found", new String[] {});
                     }
@@ -106,24 +125,18 @@ public class HandlerThread extends Thread {
             else if(subdivitions[0].equals("POST")){
                 //HTTPHandlers para POST
                 if(subdivitions[1].equals("/secret")){
-                    try{
-                        if (requestContent != null) {
-                            System.out.println(requestContent);
-                        }
-
-
-                        String path = route + "/main.html";
-                        File f = new File(path);
-                        InputStream file = new FileInputStream(f);
-                        WriteHeader(printWriter, 200, "OK", new String[] {});
-                        sendFile(file, output);
-                    }catch (IOException e) {
-                        WriteHeader(printWriter, 404, "Not Found", new String[] {});
+                    System.out.println(requestContent);
+                    assert requestContent != null;
+                    if (requestContent.toString().equals("user=root&pass=laboratorio1")) {
+                        System.out.println("Usuario logueado exitosamente." + connectionIP);
+                        Main.authClients.add(connectionIP);
+                        System.out.println("lista1: "+Main.authClients.toString());
                     }
+                    WriteHeader(printWriter, 301, "Moved Permanently", new String[]{"Location: /secret\r\n"});
                 }
             }
             else{
-                WriteHeader(printWriter, 404, "Not Found", new String[] {});
+                WriteHeader(printWriter, 404, "Not Found", new String[]{});
             }
 
             printWriter.flush();

@@ -18,11 +18,26 @@
 	<h1>Formulario Ingreso</h1>
 	<br>
 	<br>
-	<form method="POST" action="/secret">
-		<p><label>Usuario: <input type="text" name="user"></label></p>
-		<p><label>Contraseña: <input type="password" name="pass"></label></p>
-		<p><input type="submit" value="Login"></p>
+	<form class="form-horizontal" method="POST" action="/secret">
+		<div class="form-group">
+			<label for="inputEmail3" class="col-sm-2 control-label">User</label>
+			<div class="col-sm-10">
+				<input class="form-control" id="inputEmail3" name="user" placeholder="Username">
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="inputPassword3" class="col-sm-2 control-label">Password</label>
+			<div class="col-sm-10">
+				<input type="password" class="form-control" id="inputPassword3" name="pass" placeholder="Password">
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="col-sm-offset-2 col-sm-10">
+				<button type="submit" class="btn btn-default">Sign in</button>
+			</div>
+		</div>
 	</form>
+
 </div>
 </body>
 </html>
