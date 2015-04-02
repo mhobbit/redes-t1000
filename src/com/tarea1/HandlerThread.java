@@ -36,13 +36,24 @@ public class HandlerThread extends Thread {
 
             //leyendo el request
             String request = input.readLine();
+            int contentLength = 0;
             System.out.println(request);
 
             while (true) {
-                String lines = input.readLine();
-                System.out.println(lines);
-                if (lines==null || lines.length()==0)
+                String line = input.readLine();
+                System.out.println(line);
+                if (line.contains("Content-Length")){
+                    contentLength = Integer.parseInt(line.split(":")[1].replace(" ", ""));
+                }
+                if (line==null || line.length()==0)
                     break;
+            }
+            StringBuilder requestContent = null;
+            if (contentLength != 0){
+                requestContent = new StringBuilder();
+                for (int i = 0; i < contentLength; i++){
+                    requestContent.append((char) input.read());
+                }
             }
 
             OutputStream output = new BufferedOutputStream(connection.getOutputStream());
@@ -98,6 +109,11 @@ public class HandlerThread extends Thread {
                 //HTTPHandlers para POST
                 if(subdivitions[1].equals("/secret")){
                     try{
+                        if (requestContent != null) {
+                            System.out.println(requestContent);
+                        }
+
+
                         String path = route + "/main.html";
                         File f = new File(path);
                         InputStream file = new FileInputStream(f);
