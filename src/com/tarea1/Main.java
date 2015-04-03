@@ -2,21 +2,21 @@ package com.tarea1;
 
 import java.net.*;
 import java.io.*;
-import java.util.*;
 
 public class Main {
-    static List<String> authClients = new ArrayList<String>();
-    static boolean writingLog = false;
+    static boolean writingLog1 = false;
+    static boolean writingLog2 = false;
+
+    //Bonus: Creacion archivo log
     public static boolean LogUser(String logLine){
         PrintWriter pw = null;
         try {
-            if (!writingLog){
-                writingLog = true;
+            if (!writingLog1){
+                writingLog1 = true;
                 pw = new PrintWriter(new FileOutputStream(new File("log.txt"), true));
-                pw.append(logLine);
-                pw.append("\n");
+                pw.append(logLine+"\n");
                 pw.close();
-                writingLog = false;
+                writingLog1 = false;
                 return true;
             }
             else {
@@ -30,8 +30,61 @@ public class Main {
         }
     }
 
+    public static boolean LogAuthentication(String logLine){
+        PrintWriter pw = null;
+        try {
+            if (!writingLog2){
+                writingLog2 = true;
+                pw = new PrintWriter(new FileOutputStream(new File("authentication.txt"), true));
+                pw.append(logLine+"\n");
+                pw.close();
+                writingLog2 = false;
+                return true;
+            }
+            else {
+                pw.close();
+                return false;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            pw.close();
+            return true;
+        }
+    }
+
+    public static boolean LogAuthentication_check(String logLine){
+        File archivo = null;
+        FileReader fr = null;
+        BufferedReader br = null;
+
+        try {
+            archivo = new File ("authentication.txt");
+            if(!archivo.exists())
+                return false;
+            fr = new FileReader (archivo);
+            br = new BufferedReader(fr);
+            String linea;
+            while((linea = br.readLine()) != null) {
+                if (linea.contains(logLine))
+                    return true;
+            }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }finally{
+            try{
+                if( null != fr ){
+                    fr.close();
+                }
+            }catch (Exception e2){
+                e2.printStackTrace();
+            }
+        }
+        return false;
+    }
+
     public static void main(String[] args) throws Exception {
-        PoolThread Servidor = new PoolThread(3);
+        PoolThread Servidor = new PoolThread(10);
 
         //parseando argumentos:
         if (args.length!=2) {

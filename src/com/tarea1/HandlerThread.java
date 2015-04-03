@@ -1,17 +1,15 @@
 package com.tarea1;
 
-import javafx.collections.transformation.SortedList;
-
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.Semaphore;
 
 public class HandlerThread extends Thread {
     public int ID;
     public Boolean Estado;
     public Socket clientSocket;
     String route;
+    static Semaphore mutex = new Semaphore(1,true);
 
     public HandlerThread(int num){
         ID = num;
@@ -62,12 +60,17 @@ public class HandlerThread extends Thread {
                     requestContent.append((char) input.read());
                 }
             }
-            String[] subdivitions =  request.split(" ");//du du du, du du du
+            String[] subdivitions =  request.split(" ");
 
             //AQUI HACER EL ARCHIVO DE LOG DE USUARIOS (NO CONFUNDIR CON LOGIN DE USUARIOS)
             String connectionIP = connection.getInetAddress().toString();
-            String logLine = connectionIP.substring(1, connectionIP.length())+ " " +subdivitions[1];
-            while(!Main.LogUser(logLine));
+            String logLine = connectionIP.substring(1, connectionIP.length()) + " " + subdivitions[1];
+            try{
+                mutex.acquire();
+                while(!Main.LogUser(logLine));
+                mutex.release();
+            }
+            catch(InterruptedException ex){}
 
             //HTTP Handlers
             if(subdivitions[0].equals("GET")){
@@ -99,8 +102,15 @@ public class HandlerThread extends Thread {
                 }
                 else if(subdivitions[1].equals("/secret")){
                     try{
-                        System.out.println("lista: "+Main.authClients.toString());
-                        if (Main.authClients.contains(connectionIP)){
+                        //System.out.println("lista: "+Main.authClients.toString());
+                        boolean busqueda = false;
+                        try{
+                            mutex.acquire();
+                            busqueda = Main.LogAuthentication_check(connectionIP);
+                            mutex.release();
+                        }
+                        catch(InterruptedException ex){}
+                        if (busqueda){
                             String path = route + "/secret.html";
                             File f = new File(path);
                             InputStream file = new FileInputStream(f);
@@ -129,8 +139,13 @@ public class HandlerThread extends Thread {
                     assert requestContent != null;
                     if (requestContent.toString().equals("user=root&pass=laboratorio1")) {
                         System.out.println("Usuario logueado exitosamente." + connectionIP);
-                        Main.authClients.add(connectionIP);
-                        System.out.println("lista1: "+Main.authClients.toString());
+                        try{
+                            mutex.acquire();
+                            Main.LogAuthentication(connectionIP);
+                            mutex.release();
+                        }
+                        catch(InterruptedException ex){}
+                        //System.out.println("lista1: "+Main.authClients.toString());
                     }
                     WriteHeader(printWriter, 301, "Moved Permanently", new String[]{"Location: /secret\r\n"});
                 }
@@ -169,6 +184,7 @@ public class HandlerThread extends Thread {
                     PoolThread.Disponibles[ID] = true;
                 }
                 else{
+                    //Descomentar la siguiente linea para ver la cantidad de Thread corriendo
                     //System.out.println(ID);
                 }
                 try {
